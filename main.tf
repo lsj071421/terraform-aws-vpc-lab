@@ -2,6 +2,14 @@ data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
+locals {
+  common_tags = {
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+    Project     = "AWS-VPC-Lab"
+  }
+}
+
 resource "aws_vpc" "lab_vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
