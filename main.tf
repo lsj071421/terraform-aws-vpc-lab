@@ -15,32 +15,35 @@ resource "aws_vpc" "lab_vpc" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = {
-    Name        = "terraform-lab-vpc"
-    Environment = "lab"
-    ManagedBy   = "Terraform"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "terraform-lab-vpc"
+    }
+  )
 }
 
 resource "aws_subnet" "public_subnet_1" {
   vpc_id     = aws_vpc.lab_vpc.id
   cidr_block = var.public_subnet_cidr
 
-  tags = {
-    Name        = "terraform-public-subnet-1"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "terraform-public-subnet-1"
+    }
+  )
 }
 
 resource "aws_internet_gateway" "lab_igw" {
   vpc_id = aws_vpc.lab_vpc.id
 
-  tags = {
-    Name        = "terraform-lab-igw"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "terraform-lab-igw"
+    }
+  )
 }
 
 resource "aws_route_table" "public_rt" {
@@ -51,11 +54,12 @@ resource "aws_route_table" "public_rt" {
     gateway_id = aws_internet_gateway.lab_igw.id
   }
 
-  tags = {
-    Name        = "terraform-public-rt"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "terraform-public-rt"
+    }
+  )
 }
 
 resource "aws_route_table_association" "public_subnet_1" {
@@ -67,21 +71,22 @@ resource "aws_subnet" "private_subnet_1" {
   vpc_id     = aws_vpc.lab_vpc.id
   cidr_block = var.private_subnet_cidr
 
-  tags = {
-    Name        = "terraform-private-subnet-primary"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-  }
+  tags = merge(
+    {
+      Name = "terraform-private-subnet-primary"
+    }
+  )
 }
 
 resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.lab_vpc.id
 
-  tags = {
-    Name        = "terraform-private-rt"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "terraform-private-rt"
+    }
+  )
 }
 
 resource "aws_route_table_association" "private_subnet_1" {
