@@ -13,17 +13,12 @@ variable "environment" {
   type        = string
 }
 
-variable "public_subnet_cidr" {
-  description = "CIDR block for the public subnet"
-  type        = string
+variable "public_subnets" {
+  description = "CIDR blocks for the public subnets"
+  type        = map(string)
 }
 
 variable "private_subnet_cidr" {
   description = "CIDR block for the private subnet"
-  type        = string
-}
-
-variable "public_subnet_2_cidr" {
-  description = "CIDR block for the second public subnet"
   type        = string
 }

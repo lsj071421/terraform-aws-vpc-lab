@@ -23,18 +23,6 @@ resource "aws_vpc" "lab_vpc" {
   )
 }
 
-resource "aws_subnet" "public_subnet_1" {
-  vpc_id     = aws_vpc.lab_vpc.id
-  cidr_block = var.public_subnet_cidr
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "terraform-public-subnet-1"
-    }
-  )
-}
-
 resource "aws_internet_gateway" "lab_igw" {
   vpc_id = aws_vpc.lab_vpc.id
 
@@ -60,11 +48,6 @@ resource "aws_route_table" "public_rt" {
       Name = "terraform-public-rt"
     }
   )
-}
-
-resource "aws_route_table_association" "public_subnet_1" {
-  subnet_id      = aws_subnet.public_subnet_1.id
-  route_table_id = aws_route_table.public_rt.id
 }
 
 resource "aws_subnet" "private_subnet_1" {
@@ -94,19 +77,23 @@ resource "aws_route_table_association" "private_subnet_1" {
   route_table_id = aws_route_table.private_rt.id
 }
 
-resource "aws_subnet" "public_subnet_2" {
+resource "aws_subnet" "public" {
+  for_each = var.public_subnets
+
   vpc_id     = aws_vpc.lab_vpc.id
-  cidr_block = var.public_subnet_2_cidr
+  cidr_block = each.value
 
   tags = merge(
     local.common_tags,
     {
-      Name = "terraform-public-subnet-2"
+      Name = "terraform-${each.key}"
     }
   )
 }
 
-resource "aws_route_table_association" "public_subnet_2" {
-  subnet_id      = aws_subnet.public_subnet_2.id
+resource "aws_route_table_association" "public" {
+  for_each = aws_subnet.public
+
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.public_rt.id
 }
