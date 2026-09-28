@@ -22,3 +22,8 @@ variable "private_subnet_cidr" {
   description = "CIDR block for the private subnet"
   type        = string
 }
+
+variable "public_subnet_2_cidr" {
+  description = "CIDR block for the second public subnet"
+  type        = string
+}
