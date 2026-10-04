@@ -7,13 +7,6 @@ terraform {
       version = "~> 6.0"
     }
   }
-
-  backend "s3" {
-    bucket       = "lojocloud-terraform-state-2026"
-    key          = "network/terraform.tfstate"
-    region       = "us-east-1"
-    use_lockfile = true
-  }
 }
 
 provider "aws" {
