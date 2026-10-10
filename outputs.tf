@@ -37,3 +37,18 @@ output "private_route_table_id" {
   description = "ID of the private route table"
   value       = module.network.private_route_table_id
 }
+
+output "web_instance_id" {
+  description = "ID of the web EC2 instance"
+  value       = aws_instance.web.id
+}
+
+output "web_public_ip" {
+  description = "Public IPv4 address of the web EC2 instance"
+  value       = aws_instance.web.public_ip
+}
+
+output "web_url" {
+  description = "URL of the Terraform web server"
+  value       = "http://${aws_instance.web.public_ip}"
+}
