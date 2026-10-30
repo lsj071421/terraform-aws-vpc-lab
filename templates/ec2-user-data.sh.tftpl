@@ -1,0 +1,90 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Install and start Apache
+dnf install -y httpd
+systemctl enable --now httpd
+
+# Create the website
+cat > /var/www/html/index.html <<'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Terraform EC2 Lab</title>
+</head>
+<body>
+    <h1>Terraform EC2 Lab - Automated Deployment</h1>
+    <p>Apache and CloudWatch monitoring were configured automatically.</p>
+</body>
+</html>
+HTML
+
+# Create monitoring directory
+mkdir -p /opt/monitoring
+
+# Create Apache health-check script
+cat > /opt/monitoring/check-apache.sh <<'SCRIPT'
+#!/bin/bash
+set -euo pipefail
+
+REGION="${aws_region}"
+NAMESPACE="Terraform/EC2Lab"
+METRIC="ApacheHealthy"
+
+TOKEN=$(curl -fsS --max-time 3 -X PUT \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+  http://169.254.169.254/latest/api/token)
+
+INSTANCE_ID=$(curl -fsS --max-time 3 \
+  -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/instance-id)
+
+if curl -fsS --max-time 5 http://127.0.0.1/ > /dev/null; then
+    HEALTH=1
+else
+    HEALTH=0
+fi
+
+aws cloudwatch put-metric-data \
+  --region "$REGION" \
+  --namespace "$NAMESPACE" \
+  --metric-name "$METRIC" \
+  --dimensions "InstanceId=$INSTANCE_ID" \
+  --value "$HEALTH" \
+  --unit Count
+
+echo "$(date -Is) ApacheHealthy=$HEALTH InstanceId=$INSTANCE_ID"
+SCRIPT
+
+chmod 755 /opt/monitoring/check-apache.sh
+
+# Create systemd service
+cat > /etc/systemd/system/apache-health.service <<'SERVICE'
+[Unit]
+Description=Publish Apache health status to CloudWatch
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/monitoring/check-apache.sh
+SERVICE
+
+# Create systemd timer
+cat > /etc/systemd/system/apache-health.timer <<'TIMER'
+[Unit]
+Description=Run Apache health check every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=apache-health.service
+
+[Install]
+WantedBy=timers.target
+TIMER
+
+# Enable monitoring
+systemctl daemon-reload
+systemctl enable --now apache-health.timer

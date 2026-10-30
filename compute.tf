@@ -48,25 +48,14 @@ resource "aws_instance" "web" {
   associate_public_ip_address = true
   user_data_replace_on_change = true
 
-  user_data = <<-EOF
-    #!/bin/bash
-    dnf install -y httpd
-    systemctl enable httpd
-    systemctl start httpd
+  depends_on = [
+    aws_iam_role_policy.cloudwatch_metrics,
+    aws_iam_role_policy_attachment.ssm
+  ]
 
-    cat > /var/www/html/index.html <<'HTML'
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Terraform EC2 Lab</title>
-      </head>
-      <body>
-        <h1>Terraform EC2 Lab - Version 3</h1>
-        <p>This server was deployed with Terraform.</p>
-      </body>
-    </html>
-    HTML
-  EOF
+  user_data = templatefile("${path.module}/templates/ec2-user-data.sh.tftpl", {
+    aws_region = data.aws_region.current.region
+  })
 
   tags = {
     Name      = "terraform-web-server"
@@ -74,3 +63,4 @@ resource "aws_instance" "web" {
     Project   = "AWS-VPC-Lab"
   }
 }
+
