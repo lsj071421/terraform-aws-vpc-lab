@@ -22,3 +22,9 @@ variable "private_subnet_cidr" {
   description = "CIDR block for the private subnet"
   type        = string
 }
+
+variable "alert_email" {
+  description = "Email address for EC2 monitoring alerts"
+  type        = string
+  sensitive   = true
+}
